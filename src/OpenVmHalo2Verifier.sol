@@ -44,8 +44,8 @@ abstract contract OpenVmHalo2Verifier {
     /// is being verified.
     /// @param leafExeCommit The commitment to the leaf verifier.
     function verifyProof(
-        bytes calldata partialProof,
         bytes calldata guestPvs,
+        bytes calldata partialProof,
         bytes32 appExeCommit,
         bytes32 leafExeCommit
     ) external view {

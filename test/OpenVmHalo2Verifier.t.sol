@@ -26,7 +26,7 @@ contract OpenVmHalo2VerifierTest is Test, OpenVmHalo2Verifier {
     }
 
     function test_proofFormat() public view {
-        this.verifyProof(partialProof, abi.encodePacked(guestPvsHash), appExeCommit, leafExeCommit);
+        this.verifyProof(abi.encodePacked(guestPvsHash), partialProof, appExeCommit, leafExeCommit);
     }
 
     function testFuzz_proofFormat(
@@ -55,7 +55,7 @@ contract OpenVmHalo2VerifierTest is Test, OpenVmHalo2Verifier {
 
     function test_RevertWhen_InvalidPartialProofLength() public {
         vm.expectRevert(abi.encodeWithSelector(OpenVmHalo2Verifier.InvalidPartialProofLength.selector));
-        this.verifyProof(hex"aa", abi.encodePacked(guestPvsHash), appExeCommit, leafExeCommit);
+        this.verifyProof(abi.encodePacked(guestPvsHash), hex"aa", appExeCommit, leafExeCommit);
     }
 
     function test_RevertWhen_InvalidGuestPvsLength() public {
