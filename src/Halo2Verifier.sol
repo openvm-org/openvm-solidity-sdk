@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-contract AxiomV2QueryVerifier {
+contract Halo2Verifier {
     fallback(bytes calldata) external returns (bytes memory) {
         // assembly ("memory-safe") {
         //     // Enforce that Solidity memory layout is respected

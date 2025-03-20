@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
-import { AxiomV2QueryVerifier } from "./Halo2Verifier.sol";
+import { Halo2Verifier } from "./Halo2Verifier.sol";
 
 type MemoryPointer is uint256;
 
 /// @notice This contract provides a thin wrapper around the Halo2 verifier
 /// outputted by `snark-verifier`, exposing a more user-friendly interface.
-contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
+contract OpenVmHalo2Verifier is Halo2Verifier {
     /// @dev Invalid partial proof length
     error InvalidPartialProofLength();
 
@@ -25,6 +25,12 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
 
     /// @dev The length of the full proof, in bytes
     uint256 private constant FULL_PROOF_LENGTH = (12 + 2 + GUEST_PVS_LENGTH + 43) * 32;
+
+    /// @dev The leaf verifier commitment. This value is set by OpenVM.
+    bytes32 public constant LEAF_EXE_COMMIT =
+        bytes32(0x0000000000000000000000000000000000000000000000000000000000000000);
+
+    string public constant OPENVM_VERSION = "v1.0.0";
 
     /// @notice A wrapper that constructs the proof into the right format for
     /// use with the `snark-verifier` verification.
@@ -53,19 +59,18 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
     /// @param guestPvs The PVs revealed by the OpenVM guest program.
     /// @param appExeCommit The commitment to the RISC-V executable whose execution
     /// is being verified.
-    /// @param leafExeCommit The commitment to the leaf verifier.
-    function verifyProof(
-        bytes calldata guestPvs,
-        bytes calldata partialProof,
-        bytes32 appExeCommit,
-        bytes32 leafExeCommit
-    ) external view {
+    function verify(bytes calldata guestPvs, bytes calldata partialProof, bytes32 appExeCommit) external view {
+        if (guestPvs.length != GUEST_PVS_LENGTH) revert InvalidGuestPvsLength();
+        if (partialProof.length != PARTIAL_PROOF_LENGTH) revert InvalidPartialProofLength();
+
         // We will format the public values and construct the full proof payload
         // below.
 
-        MemoryPointer proofPtr = _constructProof(guestPvs, partialProof, appExeCommit, leafExeCommit);
+        MemoryPointer proofPtr = _constructProof(guestPvs, partialProof, appExeCommit);
 
         uint256 fullProofLength = FULL_PROOF_LENGTH;
+
+        /// @solidity memory-safe-assembly
         assembly {
             // Self-call using the proof as calldata
             if iszero(staticcall(gas(), address(), proofPtr, fullProofLength, 0, 0)) {
@@ -75,15 +80,11 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
         }
     }
 
-    function _constructProof(
-        bytes calldata guestPvs,
-        bytes calldata partialProof,
-        bytes32 appExeCommit,
-        bytes32 leafExeCommit
-    ) internal pure returns (MemoryPointer proofPtr) {
-        if (guestPvs.length != GUEST_PVS_LENGTH) revert InvalidGuestPvsLength();
-        if (partialProof.length != PARTIAL_PROOF_LENGTH) revert InvalidPartialProofLength();
-
+    function _constructProof(bytes calldata guestPvs, bytes calldata partialProof, bytes32 appExeCommit)
+        internal
+        pure
+        returns (MemoryPointer proofPtr)
+    {
         // The assembly code should perform the same function as the following
         // solidity code:
         //
@@ -96,6 +97,7 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
         // `guestPvs` separated into its own word.
 
         uint256 fullProofLength = FULL_PROOF_LENGTH;
+        bytes32 leafExeCommit = LEAF_EXE_COMMIT;
 
         /// @solidity memory-safe-assembly
         assembly {
