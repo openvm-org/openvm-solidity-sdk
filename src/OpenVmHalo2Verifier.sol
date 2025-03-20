@@ -2,12 +2,13 @@
 pragma solidity 0.8.19;
 
 import { Halo2Verifier } from "./Halo2Verifier.sol";
+import { IOpenVmHalo2Verifier } from "./interfaces/IOpenVmHalo2Verifier.sol";
 
 type MemoryPointer is uint256;
 
 /// @notice This contract provides a thin wrapper around the Halo2 verifier
 /// outputted by `snark-verifier`, exposing a more user-friendly interface.
-contract OpenVmHalo2Verifier is Halo2Verifier {
+contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
     /// @dev Invalid partial proof length
     error InvalidPartialProofLength();
 
@@ -35,7 +36,7 @@ contract OpenVmHalo2Verifier is Halo2Verifier {
     /// @notice A wrapper that constructs the proof into the right format for
     /// use with the `snark-verifier` verification.
     ///
-    /// @dev This function assumes that `publicValues` encodes one `bytes32`
+    /// @dev This function assumes that `guestPvs` encodes one `bytes32`
     /// hash which is the hash of the public values.
     ///
     /// The verifier expected proof format is:
@@ -45,19 +46,11 @@ contract OpenVmHalo2Verifier is Halo2Verifier {
     /// proof[14 * 32..(14 + GUEST_PVS_LENGTH) * 32]: guestPvs[0..GUEST_PVS_LENGTH]
     /// proof[(14 + GUEST_PVS_LENGTH) * 32..]: Guest PVs Suffix
     ///
-    /// Or with hex offsets
-    ///
-    /// proof[..0x180]: KZG accumulators
-    /// proof[0x180..0x1a0]: app exe commit
-    /// proof[0x1a0..0x1c0]: leaf exe commit
-    /// proof[0x1c0..(0x1c0 + GUEST_PVS_LENGTH * 32)]: guestPvs[0..GUEST_PVS_LENGTH]
-    /// proof[(0x1c0 + GUEST_PVS_LENGTH * 32)..]: Guest PVs Suffix
-    ///
     /// @param partialProof All components of the proof except the Guest PVs,
     /// leaf and app exe commits. The expected format is:
-    /// `abi.encodePacked(KZG accumulators, Guest PVs Suffix)`
+    /// `abi.encodePacked(kzgAccumulators, proofSuffix)`
     /// @param guestPvs The PVs revealed by the OpenVM guest program.
-    /// @param appExeCommit The commitment to the RISC-V executable whose execution
+    /// @param appExeCommit The commitment to the OpenVM application executable whose execution
     /// is being verified.
     function verify(bytes calldata guestPvs, bytes calldata partialProof, bytes32 appExeCommit) external view {
         if (guestPvs.length != GUEST_PVS_LENGTH) revert InvalidGuestPvsLength();
@@ -94,10 +87,18 @@ contract OpenVmHalo2Verifier is Halo2Verifier {
         // ```
         //
         // where `guestPvsPayload` is a memory payload with each byte in
-        // `guestPvs` separated into its own word.
+        // `guestPvs` separated into its own `bytes32` word.
 
         uint256 fullProofLength = FULL_PROOF_LENGTH;
         bytes32 leafExeCommit = LEAF_EXE_COMMIT;
+
+        // The expected proof format using hex offsets:
+        //
+        // proof[..0x180]: KZG accumulators
+        // proof[0x180..0x1a0]: app exe commit
+        // proof[0x1a0..0x1c0]: leaf exe commit
+        // proof[0x1c0..(0x1c0 + GUEST_PVS_LENGTH * 32)]: guestPvs[0..GUEST_PVS_LENGTH]
+        // proof[(0x1c0 + GUEST_PVS_LENGTH * 32)..]: Guest PVs Suffix
 
         /// @solidity memory-safe-assembly
         assembly {
