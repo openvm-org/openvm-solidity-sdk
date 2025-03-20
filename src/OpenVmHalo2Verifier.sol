@@ -124,9 +124,9 @@ contract OpenVmHalo2Verifier is Halo2Verifier {
 
             // Copy each byte of the guestPvs into the proof. It copies the
             // most significant bytes of guestPvs first.
-            let guestPvsMemOffset := add(proofPtr, 0x1c0)
-            for { let i := 0 } lt(i, GUEST_PVS_LENGTH) { i := add(i, 1) } {
-                calldatacopy(add(guestPvsMemOffset, add(shl(5, i), 0x1f)), add(guestPvs.offset, i), 0x01)
+            let guestPvsMemOffset := add(add(proofPtr, 0x1c0), 0x1f)
+            for { let i := 0 } iszero(eq(i, GUEST_PVS_LENGTH)) { i := add(i, 1) } {
+                calldatacopy(add(guestPvsMemOffset, shl(5, i)), add(guestPvs.offset, i), 0x01)
             }
         }
     }
