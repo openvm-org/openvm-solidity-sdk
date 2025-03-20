@@ -122,27 +122,8 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
             let wordCount := div(GUEST_PVS_LENGTH, 32)
 
             let guestPvsMemOffset := add(proofPtr, 0x1c0)
-            for { let i := 0 } iszero(eq(i, wordCount)) { i := add(i, 1) } {
-                // Load the current word
-                let word := calldataload(add(guestPvs.offset, shl(5, i)))
-
-                // Copy each byte of the word into the proof
-                for { let j := 0 } iszero(eq(j, 32)) { j := add(j, 1) } {
-                    // 32 * 32 * i + 32 * j
-                    let pvsByteOffset := add(shl(10, i), shl(5, j))
-                    mstore(add(guestPvsMemOffset, pvsByteOffset), byte(j, word))
-                }
-            }
-
-            // Then, copy the remaining bytes into the memory buffer.
-            let remainder := mod(GUEST_PVS_LENGTH, 32)
-            guestPvsMemOffset := add(guestPvsMemOffset, shl(5, wordCount))
-
-            let remainingBytes := calldataload(add(guestPvs.offset, shl(5, wordCount)))
-            for { let j := 0 } iszero(eq(j, remainder)) { j := add(j, 1) } {
-                // 32 * 32 * wordCount + 32 * j
-                let pvsByteOffset := add(shl(10, wordCount), shl(5, j))
-                mstore(add(guestPvsMemOffset, pvsByteOffset), byte(j, remainingBytes))
+            for { let i := 0 } lt(i, GUEST_PVS_LENGTH) { i := add(i, 1) } {
+                calldatacopy(add(guestPvsMemOffset, add(shl(5, i), 0x1f)), add(guestPvs.offset, i), 0x01)
             }
         }
     }
