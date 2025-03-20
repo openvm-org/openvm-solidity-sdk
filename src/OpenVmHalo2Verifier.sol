@@ -8,14 +8,22 @@ type MemoryPointer is uint256;
 /// @notice This contract provides a thin wrapper around the Halo2 verifier
 /// outputted by `snark-verifier`, exposing a more user-friendly interface.
 contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
+    /// @dev Invalid partial proof length
     error InvalidPartialProofLength();
+
+    /// @dev Invalid guest PVs length
     error InvalidGuestPvsLength();
+
+    /// @dev Proof verification failed
     error ProofVerificationFailed();
 
+    /// @dev The length of the partial proof, in bytes
     uint256 private constant PARTIAL_PROOF_LENGTH = (12 + 43) * 32;
 
+    /// @dev The length of the guest PVs, in bytes. This value is set by OpenVM.
     uint256 private constant GUEST_PVS_LENGTH = 32;
 
+    /// @dev The length of the full proof, in bytes
     uint256 private constant FULL_PROOF_LENGTH = (12 + 2 + GUEST_PVS_LENGTH + 43) * 32;
 
     /// @notice A wrapper that constructs the proof into the right format for
@@ -28,22 +36,21 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
     /// proof[..12 * 32]: KZG accumulators
     /// proof[12 * 32..13 * 32]: app exe commit
     /// proof[13 * 32..14 * 32]: leaf exe commit
-    /// proof[14 * 32..46 * 32]: guestPvsHash[0..GUEST_PVS_LENGTH]
-    /// proof[46 * 32..]: Guest PVs Suffix
+    /// proof[14 * 32..(14 + GUEST_PVS_LENGTH) * 32]: guestPvs[0..GUEST_PVS_LENGTH]
+    /// proof[(14 + GUEST_PVS_LENGTH) * 32..]: Guest PVs Suffix
     ///
     /// Or with hex offsets
     ///
     /// proof[..0x180]: KZG accumulators
     /// proof[0x180..0x1a0]: app exe commit
     /// proof[0x1a0..0x1c0]: leaf exe commit
-    /// proof[0x1c0..0x5c0]: guestPvsHash[0..GUEST_PVS_LENGTH]
-    /// proof[0x5c0..]: Guest PVs Suffix
+    /// proof[0x1c0..(0x1c0 + GUEST_PVS_LENGTH * 32)]: guestPvs[0..GUEST_PVS_LENGTH]
+    /// proof[(0x1c0 + GUEST_PVS_LENGTH * 32)..]: Guest PVs Suffix
     ///
     /// @param partialProof All components of the proof except the Guest PVs,
     /// leaf and app exe commits. The expected format is:
     /// `abi.encodePacked(KZG accumulators, Guest PVs Suffix)`
-    /// @param guestPvs The PVs revealed by the OpenVM guest program. This
-    /// contract is only compatible with a reveal of exactly 32 bytes.
+    /// @param guestPvs The PVs revealed by the OpenVM guest program.
     /// @param appExeCommit The commitment to the RISC-V executable whose execution
     /// is being verified.
     /// @param leafExeCommit The commitment to the leaf verifier.
@@ -53,8 +60,8 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
         bytes32 appExeCommit,
         bytes32 leafExeCommit
     ) external view {
-        //  We will format the pvsHash and construct the full proof payload
-        //  below for submission to the verifier.
+        // We will format the public values and construct the full proof payload
+        // below.
 
         MemoryPointer proofPtr = _constructProof(guestPvs, partialProof, appExeCommit, leafExeCommit);
 
@@ -80,14 +87,13 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
         // The assembly code should perform the same function as the following
         // solidity code:
         //
-        // bytes memory guestPvsPayload = new bytes(GUEST_PVS_LENGTH * 32);
-        // for (uint256 i = 0; i < GUEST_PVS_LENGTH; ++i) {
-        //     bytes1 pvsByte = guestPvs[i];
-        //     guestPvsPayload = bytes.concat(guestPvsPayload, bytes32(uint256(uint8(pvsByte))));
-        // }
-        //
+        // ```solidity
         // bytes memory proof =
         //     abi.encodePacked(partialProof[0:0x180], appExeCommit, leafExeCommit, guestPvsPayload, partialProof[0x180:]);
+        // ```
+        //
+        // where `guestPvsPayload` is a memory payload with each byte in
+        // `guestPvs` separated into its own word.
 
         uint256 fullProofLength = FULL_PROOF_LENGTH;
 
@@ -107,20 +113,15 @@ contract OpenVmHalo2Verifier is AxiomV2QueryVerifier {
 
             // Copy the Guest PVs Suffix (length 43 * 32 = 0x560) into the
             // end of the memory buffer, leaving GUEST_PVS_LENGTH words in
-            // between for the guestPvsHash.
+            // between for the guestPvsPayload.
             //
             // Begin copying from the end of the KZG accumulators in the
             // calldata buffer (0x180)
             let suffixProofOffset := add(0x1c0, shl(5, GUEST_PVS_LENGTH))
             calldatacopy(add(proofPtr, suffixProofOffset), add(partialProof.offset, 0x180), 0x560)
 
-            // Copy each byte of the guestPvsHash into the proof. It copies the
-            // most significant bytes of guestPvsHash first.
-
-            // Begin by loading 32-byte segments and copying each byte of each
-            // segment into its own memory slot.
-            let wordCount := div(GUEST_PVS_LENGTH, 32)
-
+            // Copy each byte of the guestPvs into the proof. It copies the
+            // most significant bytes of guestPvs first.
             let guestPvsMemOffset := add(proofPtr, 0x1c0)
             for { let i := 0 } lt(i, GUEST_PVS_LENGTH) { i := add(i, 1) } {
                 calldatacopy(add(guestPvsMemOffset, add(shl(5, i), 0x1f)), add(guestPvs.offset, i), 0x01)
