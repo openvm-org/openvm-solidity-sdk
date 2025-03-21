@@ -31,6 +31,7 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
     bytes32 public constant LEAF_EXE_COMMIT =
         bytes32(0x0071628bff0dcb64201f77ff5c7d869c7073b842e3dadf9e618e8673ef671bfd);
 
+    /// @dev The version of OpenVM that generated the proof.
     string public constant OPENVM_VERSION = "v1.0.0";
 
     /// @notice A wrapper that constructs the proof into the right format for
@@ -73,22 +74,35 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
         }
     }
 
+    /// @dev The assembly code should perform the same function as the following
+    /// solidity code:
+    //
+    /// ```solidity
+    /// bytes memory proof =
+    ///     abi.encodePacked(partialProof[0:0x180], appExeCommit, leafExeCommit, guestPvsPayload, partialProof[0x180:]);
+    /// ```
+    //
+    /// where `guestPvsPayload` is a memory payload with each byte in
+    /// `guestPvs` separated into its own `bytes32` word.
+    ///
+    /// This function does not clean the memory it allocates. Since it is the
+    /// only memory allocation that occurs in the call frame, we know that the
+    /// memory was not written to before.
+    ///
+    /// @param guestPvs The PVs revealed by the OpenVM guest program.
+    /// @param partialProof All components of the proof except the Guest PVs,
+    /// leaf and app exe commits. The expected format is:
+    /// `abi.encodePacked(kzgAccumulators, proofSuffix)`
+    /// @param appExeCommit The commitment to the OpenVM application executable
+    /// whose execution is being verified.
+    ///
+    /// @return proofPtr Memory pointer to the beginning of the constructed
+    /// proof.
     function _constructProof(bytes calldata guestPvs, bytes calldata partialProof, bytes32 appExeCommit)
         internal
         pure
         returns (MemoryPointer proofPtr)
     {
-        // The assembly code should perform the same function as the following
-        // solidity code:
-        //
-        // ```solidity
-        // bytes memory proof =
-        //     abi.encodePacked(partialProof[0:0x180], appExeCommit, leafExeCommit, guestPvsPayload, partialProof[0x180:]);
-        // ```
-        //
-        // where `guestPvsPayload` is a memory payload with each byte in
-        // `guestPvs` separated into its own `bytes32` word.
-
         uint256 fullProofLength = FULL_PROOF_LENGTH;
         bytes32 leafExeCommit = LEAF_EXE_COMMIT;
 
@@ -103,9 +117,7 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
         /// @solidity memory-safe-assembly
         assembly {
             proofPtr := mload(0x40)
-            // Allocate the memory as a safety measure. We know that this is the
-            // only memory allocation that occurs in the call frame, so we don't
-            // need to clean the allocated memory.
+            // Allocate the memory as a safety measure.
             mstore(0x40, add(proofPtr, fullProofLength))
 
             // Copy the KZG accumulators (length 0x180) into the beginning of
