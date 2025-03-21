@@ -93,9 +93,9 @@ contract OpenVmHalo2VerifierTest is Test, OpenVmHalo2Verifier {
     function checkProofFormat(bytes calldata proof) external view {
         bytes memory partialProofExpected = partialProof;
 
-        bytes memory kzgAccumulators = proof[0:0x180];
+        bytes memory _kzgAccumulators = proof[0:0x180];
         bytes memory guestPvsSuffix = proof[0x5c0:];
-        bytes memory _partialProof = abi.encodePacked(kzgAccumulators, guestPvsSuffix);
+        bytes memory _partialProof = abi.encodePacked(_kzgAccumulators, guestPvsSuffix);
         require(keccak256(_partialProof) == keccak256(partialProofExpected), "Partial proof mismatch");
 
         bytes memory _appExeCommit = proof[0x180:0x1a0];

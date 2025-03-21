@@ -47,20 +47,20 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
     /// proof[14 * 32..(14 + GUEST_PVS_LENGTH) * 32]: guestPvs[0..GUEST_PVS_LENGTH]
     /// proof[(14 + GUEST_PVS_LENGTH) * 32..]: Guest PVs Suffix
     ///
-    /// @param guestPvs The PVs revealed by the OpenVM guest program.
-    /// @param partialProof All components of the proof except the Guest PVs,
+    /// @param publicValues The PVs revealed by the OpenVM guest program.
+    /// @param proofData All components of the proof except the Guest PVs,
     /// leaf and app exe commits. The expected format is:
     /// `abi.encodePacked(kzgAccumulators, proofSuffix)`
     /// @param appExeCommit The commitment to the OpenVM application executable whose execution
     /// is being verified.
-    function verify(bytes calldata guestPvs, bytes calldata partialProof, bytes32 appExeCommit) external view {
-        if (guestPvs.length != GUEST_PVS_LENGTH) revert InvalidGuestPvsLength();
-        if (partialProof.length != PARTIAL_PROOF_LENGTH) revert InvalidPartialProofLength();
+    function verify(bytes calldata publicValues, bytes calldata proofData, bytes32 appExeCommit) external view {
+        if (publicValues.length != GUEST_PVS_LENGTH) revert InvalidGuestPvsLength();
+        if (proofData.length != PARTIAL_PROOF_LENGTH) revert InvalidPartialProofLength();
 
         // We will format the public values and construct the full proof payload
         // below.
 
-        MemoryPointer proofPtr = _constructProof(guestPvs, partialProof, appExeCommit);
+        MemoryPointer proofPtr = _constructProof(publicValues, proofData, appExeCommit);
 
         uint256 fullProofLength = FULL_PROOF_LENGTH;
 
@@ -86,12 +86,12 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
     /// `guestPvs` separated into its own `bytes32` word.
     ///
     /// This function does not clean the memory it allocates. Since it is the
-    /// only memory allocation that occurs in the call frame, we know that the
-    /// memory was not written to before.
+    /// only memory allocation that occurs in the call frame, so we know that
+    /// the memory region was not written to before.
     ///
     /// @return proofPtr Memory pointer to the beginning of the constructed
     /// proof.
-    function _constructProof(bytes calldata guestPvs, bytes calldata partialProof, bytes32 appExeCommit)
+    function _constructProof(bytes calldata publicValues, bytes calldata proofData, bytes32 appExeCommit)
         internal
         pure
         returns (MemoryPointer proofPtr)
@@ -115,7 +115,7 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
 
             // Copy the KZG accumulators (length 0x180) into the beginning of
             // the memory buffer
-            calldatacopy(proofPtr, partialProof.offset, 0x180)
+            calldatacopy(proofPtr, proofData.offset, 0x180)
 
             // Copy the App Exe Commit and Leaf Exe Commit into the memory buffer
             mstore(add(proofPtr, 0x180), appExeCommit)
@@ -128,13 +128,13 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
             // Begin copying from the end of the KZG accumulators in the
             // calldata buffer (0x180)
             let suffixProofOffset := add(0x1c0, shl(5, GUEST_PVS_LENGTH))
-            calldatacopy(add(proofPtr, suffixProofOffset), add(partialProof.offset, 0x180), 0x560)
+            calldatacopy(add(proofPtr, suffixProofOffset), add(proofData.offset, 0x180), 0x560)
 
             // Copy each byte of the guestPvs into the proof. It copies the
             // most significant bytes of guestPvs first.
             let guestPvsMemOffset := add(add(proofPtr, 0x1c0), 0x1f)
             for { let i := 0 } iszero(eq(i, GUEST_PVS_LENGTH)) { i := add(i, 1) } {
-                calldatacopy(add(guestPvsMemOffset, shl(5, i)), add(guestPvs.offset, i), 0x01)
+                calldatacopy(add(guestPvsMemOffset, shl(5, i)), add(publicValues.offset, i), 0x01)
             }
         }
     }
