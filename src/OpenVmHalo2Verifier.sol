@@ -29,7 +29,7 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
 
     /// @dev The leaf verifier commitment. This value is set by OpenVM.
     bytes32 public constant LEAF_EXE_COMMIT =
-        bytes32(0x0000000000000000000000000000000000000000000000000000000000000000);
+        bytes32(0x0071628bff0dcb64201f77ff5c7d869c7073b842e3dadf9e618e8673ef671bfd);
 
     string public constant OPENVM_VERSION = "v1.0.0";
 
@@ -103,7 +103,9 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
         /// @solidity memory-safe-assembly
         assembly {
             proofPtr := mload(0x40)
-            // Allocate the memory as a safety measure
+            // Allocate the memory as a safety measure. We know that this is the
+            // only memory allocation that occurs in the call frame, so we don't
+            // need to clean the allocated memory.
             mstore(0x40, add(proofPtr, fullProofLength))
 
             // Copy the KZG accumulators (length 0x180) into the beginning of
