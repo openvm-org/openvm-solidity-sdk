@@ -1,0 +1,15 @@
+name: OpenVM Repo Consistency Check
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - family=m7a.24xlarge
+      - disk=large
