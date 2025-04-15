@@ -6,7 +6,7 @@ verbosity = 2
 solc = "0.8.19"
 optimizer = true
 optimizer_runs = 100000
-evm_version = "shanghai"
+evm_version = "paris"
 show_progress = true
 fs_permissions = [{ access = "read", path = "./test/v1.0.1/evm.proof"}]
 
@@ -18,6 +18,7 @@ fs_permissions = [{ access = "read", path = "./test/v1.0.1/evm.proof"}]
   runs = 256
 
 [fmt]
+  sort_imports = true
   bracket_spacing = true
   int_types = "long"
   line_length = 120

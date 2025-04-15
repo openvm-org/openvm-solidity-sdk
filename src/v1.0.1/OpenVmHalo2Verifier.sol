@@ -29,7 +29,7 @@ contract OpenVmHalo2Verifier is Halo2Verifier, IOpenVmHalo2Verifier {
     uint256 private constant FULL_PROOF_LENGTH = (12 + 2 + PUBLIC_VALUES_LENGTH + 43) * 32;
 
     /// @dev The version of OpenVM that generated this verifier.
-    string public constant OPENVM_VERSION = "1.0.0";
+    string public constant OPENVM_VERSION = "1.0.1-rc.0";
 
     /// @notice A wrapper that constructs the proof into the right format for
     /// use with the `snark-verifier` verification.
