@@ -8,8 +8,7 @@ optimizer = true
 optimizer_runs = 100000
 evm_version = "shanghai"
 show_progress = true
-fs_permissions = [{ access = "read", path = "./template"}]
-ffi = true
+fs_permissions = [{ access = "read", path = "./test/v1.0.1/evm.proof"}]
 
 [profile.default.optimizer_details]
   constantOptimizer = false
