@@ -6,15 +6,17 @@ verbosity = 2
 solc = "0.8.19"
 optimizer = true
 optimizer_runs = 100000
-evm_version = "cancun"
+evm_version = "shanghai"
 show_progress = true
+fs_permissions = [{ access = "read", path = "./template"}]
+ffi = true
 
 [profile.default.optimizer_details]
   constantOptimizer = false
   yul = false
 
 [fuzz]
-  runs = 1000
+  runs = 256
 
 [fmt]
   bracket_spacing = true
