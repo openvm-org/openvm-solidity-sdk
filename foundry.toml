@@ -6,17 +6,19 @@ verbosity = 2
 solc = "0.8.19"
 optimizer = true
 optimizer_runs = 100000
-evm_version = "cancun"
+evm_version = "paris"
 show_progress = true
+fs_permissions = [{ access = "read", path = "./test/v1.0.1/evm.proof"}]
 
 [profile.default.optimizer_details]
   constantOptimizer = false
   yul = false
 
 [fuzz]
-  runs = 1000
+  runs = 256
 
 [fmt]
+  sort_imports = true
   bracket_spacing = true
   int_types = "long"
   line_length = 120

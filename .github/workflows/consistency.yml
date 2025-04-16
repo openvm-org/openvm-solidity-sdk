@@ -1,0 +1,45 @@
+name: OpenVM Repo Consistency Check
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - family=m7a.24xlarge
+      - disk=large
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+
+      - name: Install solc # svm should support arm64 linux
+        run: (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs) && svm install 0.8.19 && solc --version
+
+      - name: Clone openvm at tag
+        run: |
+          git clone https://github.com/openvm-org/openvm.git
+          cd openvm
+          git checkout feat/format-verifier
+
+      - name: Run openvm setup
+        run: |
+          cd openvm/crates
+          cargo run --bin cargo-openvm openvm setup
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Compare output to version folder
+        run: |
+          diff -r ~/.openvm/halo2/src/v1.0.1-rc.0 src/v1.0.1-rc.0 --exclude=verifier.bytecode.json
+
+      - name: Compare compiled bytecode in repo to verifier.bytecode.json
+        run: |
+          forge build --force
+          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/v1.0.1-rc.0/verifier.bytecode.json)
