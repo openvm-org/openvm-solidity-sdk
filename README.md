@@ -1,66 +1,42 @@
-## Foundry
+# OpenVM Solidity SDK
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repo houses OpenVM verifier contracts generated on official release commits of the [openvm](https://github.com/openvm-org/openvm) repo with the default VM config using the `cargo-openvm` cli tool. Advanced VM configurations may require their own generations.
 
-Foundry consists of:
+## Installation
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+To install `openvm-solidity-sdk` as a dependency in your forge project, run the following:
 
-## Documentation
-
-https://book.getfoundry.sh/
+```bash
+forge install openvm-org/openvm-solidity-sdk
+```
 
 ## Usage
 
-### Build
+If you are using a deployed instance of the verifier contract, then you can import the interfaces in your contract directly.
 
-```shell
-$ forge build
+```solidity
+import { IOpenVmHalo2Verifier } from "openvm-solidity-sdk/v1.1.1/interfaces/IOpenVmHalo2Verifier.sol";
+
+contract MyContract {
+    function myFunction() public view {
+        // ... snip ...
+
+        IOpenVmHalo2Verifier(verifierAddress)
+            .verify(publicValues, proofData, appExeCommit, appVmCommit);
+
+        // ... snip ...
+    }
+}
 ```
 
-### Test
+If you want to deploy your own instance of the verifier contract, you can use `forge create`:
 
-```shell
-$ forge test
+```bash
+forge create src/v1.1.1/OpenVmHalo2Verifier.sol:OpenVmHalo2Verifier --rpc-url $RPC --private-key $PRIVATE_KEY --broadcast
 ```
 
-### Format
+If you want to import the verifier contract into your own repository for testing purposes, note that it is locked to Solidity version `0.8.19`. If your project uses a different version, the import may not compile. As a workaround, you can compile the contract separately and use `vm.etch()` to inject the raw bytecode into your tests.
 
-```shell
-$ forge fmt
-```
+## Audits
 
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+You can find the audit reports for these contracts in the [OpenVM repo](https://github.com/openvm-org/openvm/tree/main/audits).
