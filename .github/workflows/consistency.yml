@@ -2,13 +2,23 @@ name: OpenVM Repo Consistency Check
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to check"
+        required: true
+
+  release:
+    types: [published]
+
+env:
+  VERSION: ${{ github.event.inputs.version || github.event.release.tag_name }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event.inputs.version || github.event.release.tag_name }}
   cancel-in-progress: true
 
 jobs:
-  checks:
+  consistency-check:
     runs-on:
       - runs-on=${{ github.run_id }}
       - family=m7a.24xlarge
@@ -25,7 +35,7 @@ jobs:
         run: |
           git clone https://github.com/openvm-org/openvm.git
           cd openvm
-          git checkout feat/format-verifier
+          git checkout ${VERSION}
 
       - name: Run openvm setup
         run: |
@@ -37,9 +47,9 @@ jobs:
 
       - name: Compare output to version folder
         run: |
-          diff -r ~/.openvm/halo2/src/v1.0.1-rc.0 src/v1.0.1-rc.0 --exclude=verifier.bytecode.json
+          diff -r ~/.openvm/halo2/src/${VERSION} src/${VERSION} --exclude=verifier.bytecode.json
 
       - name: Compare compiled bytecode in repo to verifier.bytecode.json
         run: |
           forge build --force
-          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/v1.0.1-rc.0/verifier.bytecode.json)
+          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/${VERSION}/verifier.bytecode.json)
