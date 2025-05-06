@@ -1,0 +1,56 @@
+name: OpenVM Repo Consistency Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to check"
+        required: true
+
+env:
+  VERSION: ${{ github.event.inputs.version }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.version }}
+  cancel-in-progress: true
+
+jobs:
+  consistency-check:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - family=m7a.24xlarge
+      - disk=large
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+
+      - name: Extract major.minor into TRUNC_VERSION
+        id: extract
+        run: echo "TRUNC_VERSION=$(echo '${{ env.VERSION }}' | cut -d '.' -f1-2)" >> "$GITHUB_ENV"
+
+      - name: Install solc # svm should support arm64 linux
+        run: (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs) && svm install 0.8.19 && solc --version
+
+      - name: Clone openvm at tag
+        run: |
+          git clone https://github.com/openvm-org/openvm.git
+          cd openvm
+          git checkout ${VERSION}
+
+      - name: Run openvm setup
+        run: |
+          cd openvm/crates
+          cargo run --bin cargo-openvm openvm setup
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Compare output to version folder
+        run: |
+          diff -r ~/.openvm/halo2/src/${TRUNC_VERSION} src/${TRUNC_VERSION} --exclude=verifier.bytecode.json
+
+      - name: Compare compiled bytecode in repo to verifier.bytecode.json
+        run: |
+          forge build --force
+          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/${TRUNC_VERSION}/verifier.bytecode.json)
