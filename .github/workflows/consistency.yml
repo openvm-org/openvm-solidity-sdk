@@ -14,6 +14,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.version }}
   cancel-in-progress: true
 
+run-name: ${{ github.workflow }}-${{ github.event.inputs.version }}
+
 jobs:
   consistency-check:
     runs-on:
