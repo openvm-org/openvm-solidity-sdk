@@ -37,8 +37,8 @@ jobs:
       - name: Check TRUNC_VERSION
         run: |
           expected="${VERSION%.*}"          # bash: strip last “.patch”
-          if [ "${{ steps.extract.outputs.TRUNC_VERSION }}" != "$expected" ]; then
-            echo "::error::TRUNC_VERSION mismatch: got '${{ steps.extract.outputs.TRUNC_VERSION }}' but expected '$expected'"
+          if [ "$TRUNC_VERSION" != "$expected" ]; then
+            echo "::error::TRUNC_VERSION mismatch: got '$TRUNC_VERSION' but expected '$expected'"
             exit 1
           fi
 
