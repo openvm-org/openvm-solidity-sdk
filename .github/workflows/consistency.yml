@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to check"
+        description: "Version of OpenVM to check"
+        required: true
+      sdk-version:
+        description: "Version of openvm-solidity-sdk to check"
         required: true
 
 env:
@@ -14,7 +17,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.version }}
   cancel-in-progress: true
 
-run-name: ${{ github.workflow }}-${{ github.event.inputs.version }}
+run-name: "check ${{ github.event.inputs.sdk-version }} verifier is consistent with OpenVM version ${{ github.event.inputs.version }}"
 
 jobs:
   consistency-check:
@@ -30,6 +33,14 @@ jobs:
       - name: Extract major.minor into TRUNC_VERSION
         id: extract
         run: echo "TRUNC_VERSION=$(echo '${{ env.VERSION }}' | cut -d '.' -f1-2)" >> "$GITHUB_ENV"
+
+      - name: Check TRUNC_VERSION
+        run: |
+          expected="${VERSION%.*}"          # bash: strip last “.patch”
+          if [ "${{ steps.extract.outputs.TRUNC_VERSION }}" != "$expected" ]; then
+            echo "::error::TRUNC_VERSION mismatch: got '${{ steps.extract.outputs.TRUNC_VERSION }}' but expected '$expected'"
+            exit 1
+          fi
 
       - name: Install solc # svm should support arm64 linux
         run: (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs) && svm install 0.8.19 && solc --version
