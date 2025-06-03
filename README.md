@@ -41,7 +41,7 @@ If you want to import the verifier contract into your own repository for testing
 
 ## Audits
 
-Versions v1.1 and later of these contracts are recommended for production use. The code to generate these contracts from release commits of OpenVM was [audited](https://github.com/openvm-org/openvm/blob/main/audits/v1.1.1-cantina-report.pdf) by [Cantina](https://cantina.xyz/) in April 2025.
+Versions v1.2 and later of these contracts are recommended for production use. The code to generate these contracts from release commits of OpenVM was [audited](https://github.com/openvm-org/openvm/blob/main/audits/v1.1.1-cantina-report.pdf) by [Cantina](https://cantina.xyz/) in April 2025.
 
 ## Security
 
