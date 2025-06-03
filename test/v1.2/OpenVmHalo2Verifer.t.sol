@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { OpenVmHalo2Verifier } from "../../src/v1.1/OpenVmHalo2Verifier.sol";
+import { OpenVmHalo2Verifier } from "../../src/v1.2/OpenVmHalo2Verifier.sol";
 import { LibString } from "../helpers/LibString.sol";
 import { Test, console2, safeconsole as console } from "forge-std/Test.sol";
 
@@ -26,7 +26,7 @@ contract OpenVmHalo2VerifierTest is Test {
     }
 
     function test_ValidProofVerifies() public view {
-        string memory evmProofJson = vm.readFile("test/v1.1/evm.proof");
+        string memory evmProofJson = vm.readFile("test/v1.2/evm.proof");
         bytes32 _appExeCommit = vm.parseJsonBytes32(evmProofJson, ".app_exe_commit");
         bytes32 _appVmCommit = vm.parseJsonBytes32(evmProofJson, ".app_vm_commit");
         bytes memory _guestPvs = vm.parseJsonBytes(evmProofJson, ".user_public_values");
