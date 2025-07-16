@@ -54,7 +54,7 @@ jobs:
       - name: Run openvm setup
         run: |
           cd openvm/crates
-          cargo run --bin cargo-openvm openvm setup
+          cargo run --bin cargo-openvm openvm setup --evm
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -66,4 +66,4 @@ jobs:
       - name: Compare compiled bytecode in repo to verifier.bytecode.json
         run: |
           forge build --force
-          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/${TRUNC_VERSION}/verifier.bytecode.json)
+          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/${TRUNC_VERSION}/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/${TRUNC_VERSION}/verifier.bytecode.json)
