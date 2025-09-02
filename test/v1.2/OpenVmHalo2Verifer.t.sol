@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import { OpenVmHalo2Verifier } from "../../src/v1.2/OpenVmHalo2Verifier.sol";
-import { LibString } from "../helpers/LibString.sol";
 import { Test, console2, safeconsole as console } from "forge-std/Test.sol";
 
 contract OpenVmHalo2VerifierTest is Test {
