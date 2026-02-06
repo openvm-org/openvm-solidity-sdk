@@ -18,6 +18,7 @@ fs_permissions = [{ access = "read", path = "./test/v1.2/evm.proof"}, { access =
   runs = 256
 
 [fmt]
+  ignore = ["src/v1.2", "src/v1.3", "src/v1.4", "test/v1.2", "test/v1.3", "test/v1.4"]
   sort_imports = true
   bracket_spacing = true
   int_types = "long"
