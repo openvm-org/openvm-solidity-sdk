@@ -42,9 +42,8 @@ contract OpenVmHalo2VerifierTest is Test {
             guestPvs[i] = bytes1(uint8(i));
         }
 
-        (bool success,) = address(verifier).delegatecall(
-            abi.encodeCall(OpenVmHalo2Verifier.verify, (guestPvs, proofData, appExeCommit, appVmCommit))
-        );
+        (bool success,) = address(verifier)
+            .delegatecall(abi.encodeCall(OpenVmHalo2Verifier.verify, (guestPvs, proofData, appExeCommit, appVmCommit)));
         require(success, "Verification failed");
     }
 
