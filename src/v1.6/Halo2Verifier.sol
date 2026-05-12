@@ -7,7 +7,9 @@ contract Halo2Verifier {
         assembly ("memory-safe") {
             // Enforce that Solidity memory layout is respected
             let data := mload(0x40)
-            if iszero(eq(data, 0x80)) { revert(0, 0) }
+            if iszero(eq(data, 0x80)) {
+                revert(0, 0)
+            }
 
             let success := true
             let f_p := 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
@@ -75,7 +77,7 @@ contract Halo2Verifier {
             mstore(0x600, mod(calldataload(0x560), f_q))
             mstore(0x620, mod(calldataload(0x580), f_q))
             mstore(0x640, mod(calldataload(0x5a0), f_q))
-            mstore(0x80, 9449048943492959653911178783129412994635280543231919696357127360873190449727)
+            mstore(0x80, 3099200876874169560829918599785312545415625616099245974171476775798883330872)
 
             {
                 let x := calldataload(0x5c0)
@@ -1933,8 +1935,8 @@ contract Halo2Verifier {
             mstore(0x5520, mload(0x5480))
             mstore(0x5540, mload(0x54a0))
             success := and(eq(staticcall(gas(), 0x6, 0x54e0, 0x80, 0x54e0, 0x40), 1), success)
-            mstore(0x5560, 0x1cd33af23038aaa40b7bc79128574808f33c7726ea7921057fe55384c6c67982)
-            mstore(0x5580, 0x1d706626e43f4bc273432b598b57da1ea59b29db676a7a06ad633b4e4a6e34c1)
+            mstore(0x5560, 0x28c9feac830a1d23683f2a635ca9232fd5a627948b2a063e04edbbd5df806073)
+            mstore(0x5580, 0x098706d829dcb3f6fcc0df885174a2a2de081c590a00ac95f4525f60babbefe9)
             mstore(0x55a0, mload(0x4f20))
             success := and(eq(staticcall(gas(), 0x7, 0x5560, 0x60, 0x5560, 0x40), 1), success)
             mstore(0x55c0, mload(0x54e0))
@@ -1969,8 +1971,8 @@ contract Halo2Verifier {
             mstore(0x58a0, mload(0x5800))
             mstore(0x58c0, mload(0x5820))
             success := and(eq(staticcall(gas(), 0x6, 0x5860, 0x80, 0x5860, 0x40), 1), success)
-            mstore(0x58e0, 0x2a60d1614c60b72718e46c5e6e18ebf0b30209e311c76740dc0a24a40a1b6666)
-            mstore(0x5900, 0x1385b42794c80a1cf6db8f02edaf96a678ab94120992454165681422f8a55d62)
+            mstore(0x58e0, 0x1ecade5ea10ab9a44d2993527fc6263bd9148efb451b2eda13141156ff68104a)
+            mstore(0x5900, 0x2d541cb34d01ce121940240afcdc8ede1d387be66ce2c56acfe3adde7030850d)
             mstore(0x5920, mload(0x4fa0))
             success := and(eq(staticcall(gas(), 0x7, 0x58e0, 0x60, 0x58e0, 0x40), 1), success)
             mstore(0x5940, mload(0x5860))
@@ -1978,8 +1980,8 @@ contract Halo2Verifier {
             mstore(0x5980, mload(0x58e0))
             mstore(0x59a0, mload(0x5900))
             success := and(eq(staticcall(gas(), 0x6, 0x5940, 0x80, 0x5940, 0x40), 1), success)
-            mstore(0x59c0, 0x0ee1702175e9b1f5a006e2894547fb262fb6894245abcc875050d9d8012be36a)
-            mstore(0x59e0, 0x09bc48ad36dc02c272630a69aeedc289520f891ef479d52653fcd779eb94c249)
+            mstore(0x59c0, 0x1f7ec4a8e2d1dc36ac3029083025a40f990139b0d508385cb50e58cb9a90d09f)
+            mstore(0x59e0, 0x1977fe3123b724391fee488dc63a61ee240ea7ddb6b24b11cfbb0b96dff676b5)
             mstore(0x5a00, mload(0x4fc0))
             success := and(eq(staticcall(gas(), 0x7, 0x59c0, 0x60, 0x59c0, 0x40), 1), success)
             mstore(0x5a20, mload(0x5940))
