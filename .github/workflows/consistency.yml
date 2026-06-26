@@ -24,7 +24,7 @@ jobs:
     runs-on:
       - runs-on=${{ github.run_id }}
       - family=m7a.24xlarge
-      - disk=large
+      - volume=80gb
 
     steps:
       - name: Checkout current repo
