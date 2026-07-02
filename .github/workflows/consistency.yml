@@ -12,9 +12,10 @@ on:
 
 env:
   VERSION: ${{ github.event.inputs.version }}
+  SDK_VERSION: ${{ github.event.inputs.sdk-version }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.inputs.version }}
+  group: ${{ github.workflow }}-${{ github.event.inputs.version }}-${{ github.event.inputs.sdk-version }}
   cancel-in-progress: true
 
 run-name: "check ${{ github.event.inputs.sdk-version }} verifier is consistent with OpenVM version ${{ github.event.inputs.version }}"
@@ -41,6 +42,10 @@ jobs:
             echo "::error::TRUNC_VERSION mismatch: got '$TRUNC_VERSION' but expected '$expected'"
             exit 1
           fi
+          if [[ "$SDK_VERSION" != "$TRUNC_VERSION" && "$SDK_VERSION" != "$TRUNC_VERSION"-* ]]; then
+            echo "::error::sdk-version '$SDK_VERSION' must be '$TRUNC_VERSION' or a '$TRUNC_VERSION-*' variant"
+            exit 1
+          fi
 
       - name: Install solc # svm should support arm64 linux
         run: (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs) && svm install 0.8.19 && solc --version
@@ -65,8 +70,8 @@ jobs:
           mkdir -p "${compare_dir}/repo/src" "${compare_dir}/generated/src"
           cp foundry.toml "${compare_dir}/repo/foundry.toml"
           cp foundry.toml "${compare_dir}/generated/foundry.toml"
-          cp -R "src/${TRUNC_VERSION}" "${compare_dir}/repo/src/${TRUNC_VERSION}"
-          cp -R "${HOME}/.openvm/halo2/src/${TRUNC_VERSION}" "${compare_dir}/generated/src/${TRUNC_VERSION}"
+          cp -R "src/${SDK_VERSION}" "${compare_dir}/repo/src/${SDK_VERSION}"
+          cp -R "${HOME}/.openvm/halo2/src/${SDK_VERSION}" "${compare_dir}/generated/src/${SDK_VERSION}"
 
           forge fmt --root "${compare_dir}/repo"
           forge fmt --root "${compare_dir}/generated"
