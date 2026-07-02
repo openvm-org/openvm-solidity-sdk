@@ -68,7 +68,9 @@ jobs:
           cp -R "src/${TRUNC_VERSION}" "${compare_dir}/repo/src/${TRUNC_VERSION}"
           cp -R "${HOME}/.openvm/halo2/src/${TRUNC_VERSION}" "${compare_dir}/generated/src/${TRUNC_VERSION}"
 
-          forge build --force --no-metadata --root "${compare_dir}/repo" --config-path "${compare_dir}/repo/foundry.toml"
-          forge build --force --no-metadata --root "${compare_dir}/generated" --config-path "${compare_dir}/generated/foundry.toml"
+          forge fmt --root "${compare_dir}/repo"
+          forge fmt --root "${compare_dir}/generated"
+          forge build --force --root "${compare_dir}/repo" --config-path "${compare_dir}/repo/foundry.toml"
+          forge build --force --root "${compare_dir}/generated" --config-path "${compare_dir}/generated/foundry.toml"
 
           diff <(jq -r '.bytecode.object | ltrimstr("0x")' "${compare_dir}/repo/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json") <(jq -r '.bytecode.object | ltrimstr("0x")' "${compare_dir}/generated/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json")
