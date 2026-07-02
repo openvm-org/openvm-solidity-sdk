@@ -59,11 +59,10 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Compare output to version folder
-        run: |
-          diff -r ~/.openvm/halo2/src/${TRUNC_VERSION} src/${TRUNC_VERSION} --exclude=verifier.bytecode.json
-
       - name: Compare compiled bytecode in repo to verifier.bytecode.json
         run: |
-          forge build --force
-          diff <(jq -r '.bytecode.object | ltrimstr("0x")' out/${TRUNC_VERSION}/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json) <(jq -r '.bytecode | ltrimstr("0x")' ~/.openvm/halo2/src/${TRUNC_VERSION}/verifier.bytecode.json)
+          forge build --force --no-metadata
+
+          generated=$(jq -r '.bytecode | ltrimstr("0x")' "${HOME}/.openvm/halo2/src/${TRUNC_VERSION}/verifier.bytecode.json")
+          metadata_chars=$((16#${generated: -4} * 2 + 4))
+          diff <(jq -r '.bytecode.object | ltrimstr("0x")' "out/${TRUNC_VERSION}/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json") <(printf "%s\n" "${generated:0:${#generated} - metadata_chars}")
