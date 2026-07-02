@@ -59,10 +59,16 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Compare compiled bytecode in repo to verifier.bytecode.json
+      - name: Compare compiled bytecode in repo to generated source
         run: |
-          forge build --force --no-metadata
+          compare_dir=$(mktemp -d)
+          mkdir -p "${compare_dir}/repo/src" "${compare_dir}/generated/src"
+          cp foundry.toml "${compare_dir}/repo/foundry.toml"
+          cp foundry.toml "${compare_dir}/generated/foundry.toml"
+          cp -R "src/${TRUNC_VERSION}" "${compare_dir}/repo/src/${TRUNC_VERSION}"
+          cp -R "${HOME}/.openvm/halo2/src/${TRUNC_VERSION}" "${compare_dir}/generated/src/${TRUNC_VERSION}"
 
-          generated=$(jq -r '.bytecode | ltrimstr("0x")' "${HOME}/.openvm/halo2/src/${TRUNC_VERSION}/verifier.bytecode.json")
-          metadata_chars=$((16#${generated: -4} * 2 + 4))
-          diff <(jq -r '.bytecode.object | ltrimstr("0x")' "out/${TRUNC_VERSION}/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json") <(printf "%s\n" "${generated:0:${#generated} - metadata_chars}")
+          forge build --force --no-metadata --root "${compare_dir}/repo" --config-path "${compare_dir}/repo/foundry.toml"
+          forge build --force --no-metadata --root "${compare_dir}/generated" --config-path "${compare_dir}/generated/foundry.toml"
+
+          diff <(jq -r '.bytecode.object | ltrimstr("0x")' "${compare_dir}/repo/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json") <(jq -r '.bytecode.object | ltrimstr("0x")' "${compare_dir}/generated/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json")
