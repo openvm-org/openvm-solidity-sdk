@@ -46,6 +46,10 @@ jobs:
             echo "::error::sdk-version '$SDK_VERSION' must be '$TRUNC_VERSION' or a '$TRUNC_VERSION-*' variant"
             exit 1
           fi
+          if [[ "$TRUNC_VERSION" == v2.* && "$SDK_VERSION" != "$TRUNC_VERSION-base" ]]; then
+            echo "::error::cargo openvm setup --evm only generates the '$TRUNC_VERSION-base' verifier; got sdk-version '$SDK_VERSION'"
+            exit 1
+          fi
 
       - name: Install solc # svm should support arm64 linux
         run: (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs) && svm install 0.8.19 && solc --version
