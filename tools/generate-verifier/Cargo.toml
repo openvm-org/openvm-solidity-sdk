@@ -1,0 +1,19 @@
+[package]
+name = "openvm-verifier-generator"
+version = "0.1.0"
+edition = "2021"
+authors = ["OpenVM Authors"]
+license = "MIT OR Apache-2.0"
+
+[features]
+cuda = ["openvm-sdk/cuda"]
+
+[dependencies]
+clap = { version = "4.5.23", features = ["derive"] }
+eyre = "0.6"
+openvm-sdk = { git = "https://github.com/openvm-org/openvm.git", tag = "v2.0.0", features = ["evm-verify"] }
+openvm-stark-sdk = { git = "https://github.com/openvm-org/stark-backend.git", tag = "v2.0.0", default-features = false }
+
+[[bin]]
+name = "generate-verifier"
+path = "bin/generate_verifier.rs"

@@ -2,7 +2,7 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/openvm-org/openvm-solidity-sdk)
 
-This repository contains OpenVM verifier contracts generated from official release commits of the [openvm](https://github.com/openvm-org/openvm) repository using the default VM configuration via the cargo-openvm CLI tool. If you're using an advanced or custom VM configuration, you may need to generate and maintain your own verifier contracts separately.
+This repository contains OpenVM verifier contracts generated from official release commits of the [openvm](https://github.com/openvm-org/openvm) repository, either by the cargo-openvm CLI tool or the OpenVM SDK. Most releases use the default VM configuration; some releases may include additional supported variants, such as the v2.0 deferral-enabled verifier. If you're using an advanced or custom VM configuration, you may need to generate and maintain your own verifier contracts separately.
 
 The contracts are built on every _minor_ release as OpenVM guarantees verifier backward compatibility across patch releases.
 
@@ -14,12 +14,21 @@ To install `openvm-solidity-sdk` as a dependency in your forge project, run the 
 forge install openvm-org/openvm-solidity-sdk
 ```
 
+## v2.0 Contract Variants
+
+The v2.0 verifier contracts are published in two variants:
+
+- `v2.0-base` is the standard verifier generated for the default OpenVM v2.0 configuration.
+- `v2.0-deferral` is generated with deferral support enabled. Use this variant when your verifier must support verifying `verify-stark` guest programs.
+
+The examples below use `v2.0-base`. If your application needs guest program `verify-stark` support, replace `v2.0-base` with `v2.0-deferral` in the import and deployment paths.
+
 ## Usage
 
 If you are using a deployed instance of the verifier contract, then you can import the interfaces in your contract directly.
 
 ```solidity
-import { IOpenVmHalo2Verifier } from "openvm-solidity-sdk/v1.7/interfaces/IOpenVmHalo2Verifier.sol";
+import { IOpenVmHalo2Verifier } from "openvm-solidity-sdk/v2.0-base/interfaces/IOpenVmHalo2Verifier.sol";
 
 contract MyContract {
     function myFunction() public view {
@@ -36,7 +45,7 @@ contract MyContract {
 If you want to deploy your own instance of the verifier contract, you can use `forge create`:
 
 ```bash
-forge create src/v1.7/OpenVmHalo2Verifier.sol:OpenVmHalo2Verifier --rpc-url $RPC --private-key $PRIVATE_KEY --broadcast
+forge create src/v2.0-base/OpenVmHalo2Verifier.sol:OpenVmHalo2Verifier --rpc-url $RPC --private-key $PRIVATE_KEY --broadcast
 ```
 
 If you want to import the verifier contract into your own repository for testing purposes, note that it is locked to Solidity version `0.8.19`. If your project uses a different version, the import may not compile. As a workaround, you can compile the contract separately and use `vm.etch()` to inject the raw bytecode into your tests.

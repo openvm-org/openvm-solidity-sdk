@@ -1,0 +1,86 @@
+name: OpenVM SDK Consistency Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "OpenVM version to check, e.g. 2.0.0"
+        required: true
+
+env:
+  GENERATOR_MANIFEST: tools/generate-verifier/Cargo.toml
+  VERSION: ${{ github.event.inputs.version }}
+
+jobs:
+  consistency-check:
+    name: v${{ github.event.inputs.version }}-${{ matrix.variant }}
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - family=m7a.24xlarge
+      - volume=80gb
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [base, deferral]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/generate-verifier
+
+      - name: Install solc
+        run: |
+          (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs)
+          svm install 0.8.19
+          solc --version
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.5.0
+
+      - name: Build generator
+        run: |
+          cargo fmt --check --manifest-path "${GENERATOR_MANIFEST}"
+          cargo build --release --locked --manifest-path "${GENERATOR_MANIFEST}" --bin generate-verifier
+
+      - name: Generate verifier
+        run: |
+          trunc_version="$(echo "${VERSION}" | cut -d '.' -f1-2)"
+          expected="${VERSION%.*}"
+          test "${trunc_version}" = "${expected}"
+          expected_dir="v${trunc_version}-${{ matrix.variant }}"
+
+          generated_dir="$(mktemp -d)"
+          tools/generate-verifier/target/release/generate-verifier \
+            --variant "${{ matrix.variant }}" \
+            --output-dir "${generated_dir}"
+
+          test -d "${generated_dir}/src/${expected_dir}"
+          test -d "src/${expected_dir}"
+
+          echo "GENERATED_DIR=${generated_dir}" >> "$GITHUB_ENV"
+          echo "VERSION_DIR=${expected_dir}" >> "$GITHUB_ENV"
+
+      - name: Compare bytecode
+        run: |
+          repo_root="$(mktemp -d)"
+          generated_root="$(mktemp -d)"
+          mkdir -p "${repo_root}/src" "${generated_root}/src"
+
+          cp foundry.toml "${repo_root}/foundry.toml"
+          cp foundry.toml "${generated_root}/foundry.toml"
+          cp -R "src/${VERSION_DIR}" "${repo_root}/src/${VERSION_DIR}"
+          cp -R "${GENERATED_DIR}/src/${VERSION_DIR}" "${generated_root}/src/${VERSION_DIR}"
+
+          forge fmt --root "${repo_root}"
+          forge fmt --root "${generated_root}"
+          forge build --force --root "${repo_root}" --config-path "${repo_root}/foundry.toml"
+          forge build --force --root "${generated_root}" --config-path "${generated_root}/foundry.toml"
+
+          diff \
+            <(jq -r '.bytecode.object | ltrimstr("0x")' "${repo_root}/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json") \
+            <(jq -r '.bytecode.object | ltrimstr("0x")' "${generated_root}/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json")
