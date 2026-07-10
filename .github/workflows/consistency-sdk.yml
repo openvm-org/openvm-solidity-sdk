@@ -47,6 +47,13 @@ jobs:
           cargo fmt --check --manifest-path "${GENERATOR_MANIFEST}"
           cargo build --release --locked --manifest-path "${GENERATOR_MANIFEST}" --bin generate-verifier
 
+      - name: Download OpenVM setup artifacts
+        run: |
+          git clone https://github.com/openvm-org/openvm.git
+          cd openvm
+          git checkout v${VERSION}
+          bash scripts/download_setup.sh
+
       - name: Generate verifier
         run: |
           trunc_version="$(echo "${VERSION}" | cut -d '.' -f1-2)"
