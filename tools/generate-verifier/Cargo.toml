@@ -11,8 +11,8 @@ cuda = ["openvm-sdk/cuda"]
 [dependencies]
 clap = { version = "4.5.23", features = ["derive"] }
 eyre = "0.6"
-openvm-sdk = { git = "https://github.com/openvm-org/openvm.git", branch = "main", features = ["evm-verify"] }
-openvm-stark-sdk = { git = "https://github.com/openvm-org/stark-backend.git", branch = "develop-v2", default-features = false }
+openvm-sdk = { git = "https://github.com/openvm-org/openvm.git", tag = "v2.0.0", features = ["evm-verify"] }
+openvm-stark-sdk = { git = "https://github.com/openvm-org/stark-backend.git", tag = "v2.0.0", default-features = false }
 
 [[bin]]
 name = "generate-verifier"

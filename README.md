@@ -2,7 +2,7 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/openvm-org/openvm-solidity-sdk)
 
-This repository contains OpenVM verifier contracts generated from official release commits of the [openvm](https://github.com/openvm-org/openvm) repository via the cargo-openvm CLI tool. Most releases use the default VM configuration; some releases may include additional supported variants, such as the v2.0 deferral-enabled verifier. If you're using an advanced or custom VM configuration, you may need to generate and maintain your own verifier contracts separately.
+This repository contains OpenVM verifier contracts generated from official release commits of the [openvm](https://github.com/openvm-org/openvm) repository, either by the cargo-openvm CLI tool or the OpenVM SDK. Most releases use the default VM configuration; some releases may include additional supported variants, such as the v2.0 deferral-enabled verifier. If you're using an advanced or custom VM configuration, you may need to generate and maintain your own verifier contracts separately.
 
 The contracts are built on every _minor_ release as OpenVM guarantees verifier backward compatibility across patch releases.
 
