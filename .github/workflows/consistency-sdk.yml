@@ -28,6 +28,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Patch generator OpenVM SDK version
+        run: |
+          mkdir -p .cargo
+          cat > .cargo/config.toml <<EOF
+          [patch."https://github.com/openvm-org/openvm.git"]
+          openvm-sdk = { git = "https://github.com/openvm-org/openvm.git", tag = "v${VERSION}" }
+          EOF
+          cargo update --manifest-path "${GENERATOR_MANIFEST}" --recursive openvm-sdk
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: tools/generate-verifier
