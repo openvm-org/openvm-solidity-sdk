@@ -1,4 +1,4 @@
-name: OpenVM Repo Consistency Check
+name: OpenVM CLI Consistency Check
 
 on:
   workflow_dispatch:
