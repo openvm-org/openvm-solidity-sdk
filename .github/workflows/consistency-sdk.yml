@@ -28,14 +28,20 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Checkout OpenVM
+        run: |
+          git clone https://github.com/openvm-org/openvm.git
+          cd openvm
+          git checkout "v${VERSION}"
+
       - name: Patch generator OpenVM SDK version
         run: |
           mkdir -p .cargo
           cat > .cargo/config.toml <<EOF
           [patch."https://github.com/openvm-org/openvm.git"]
-          openvm-sdk = { git = "https://github.com/openvm-org/openvm.git", tag = "v${VERSION}" }
+          openvm-sdk = { path = "${GITHUB_WORKSPACE}/openvm/crates/sdk" }
           EOF
-          cargo update --manifest-path "${GENERATOR_MANIFEST}" --recursive openvm-sdk
+          cargo update --manifest-path "${GENERATOR_MANIFEST}" --recursive -p openvm-sdk
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -58,9 +64,7 @@ jobs:
 
       - name: Download OpenVM setup artifacts
         run: |
-          git clone https://github.com/openvm-org/openvm.git
           cd openvm
-          git checkout v${VERSION}
           bash scripts/download_setup.sh
 
       - name: Generate verifier
