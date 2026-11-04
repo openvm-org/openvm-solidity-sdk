@@ -70,16 +70,22 @@ jobs:
 
       - name: Compare compiled bytecode in repo to generated source
         run: |
+          generated_dir="${HOME}/.openvm/${TRUNC_VERSION}/halo2"
+          if [[ ! -d "${generated_dir}/src/${SDK_VERSION}" ]]; then
+            # Older OpenVM releases used an unversioned cache directory.
+            generated_dir="${HOME}/.openvm/halo2"
+          fi
+
           compare_dir=$(mktemp -d)
           mkdir -p "${compare_dir}/repo/src" "${compare_dir}/generated/src"
           cp foundry.toml "${compare_dir}/repo/foundry.toml"
           cp foundry.toml "${compare_dir}/generated/foundry.toml"
           cp -R "src/${SDK_VERSION}" "${compare_dir}/repo/src/${SDK_VERSION}"
-          cp -R "${HOME}/.openvm/halo2/src/${SDK_VERSION}" "${compare_dir}/generated/src/${SDK_VERSION}"
+          cp -R "${generated_dir}/src/${SDK_VERSION}" "${compare_dir}/generated/src/${SDK_VERSION}"
 
           forge fmt --root "${compare_dir}/repo"
           forge fmt --root "${compare_dir}/generated"
-          forge build --force --root "${compare_dir}/repo" --config-path "${compare_dir}/repo/foundry.toml"
-          forge build --force --root "${compare_dir}/generated" --config-path "${compare_dir}/generated/foundry.toml"
+          forge build --force --root "${compare_dir}/repo"
+          forge build --force --root "${compare_dir}/generated"
 
           diff <(jq -r '.bytecode.object | ltrimstr("0x")' "${compare_dir}/repo/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json") <(jq -r '.bytecode.object | ltrimstr("0x")' "${compare_dir}/generated/out/OpenVmHalo2Verifier.sol/OpenVmHalo2Verifier.json")
