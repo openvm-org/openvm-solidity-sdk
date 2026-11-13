@@ -42,6 +42,9 @@ contract MyContract {
 }
 ```
 
+> [!WARNING]
+> **We strongly recommend against using the verifier's `fallback` function directly.** Use the `IOpenVmHalo2Verifier.verify` interface instead to avoid footguns such as those described in [Scroll's report](https://forum.scroll.io/t/report-scroll-mainnet-emergency-upgrade-on-2026-11-10/1586).
+
 If you want to deploy your own instance of the verifier contract, you can use `forge create`:
 
 ```bash
