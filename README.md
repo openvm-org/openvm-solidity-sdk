@@ -14,21 +14,21 @@ To install `openvm-solidity-sdk` as a dependency in your forge project, run the 
 forge install openvm-org/openvm-solidity-sdk
 ```
 
-## v2.0 Contract Variants
+## v2 Contract Variants
 
-The v2.0 verifier contracts are published in two variants:
+The v2.0 and v2.1 verifier contracts are each published in two variants:
 
-- `v2.0-base` is the standard verifier generated for the default OpenVM v2.0 configuration.
-- `v2.0-deferral` is generated with deferral support enabled. Use this variant when your verifier must support verifying `verify-stark` guest programs.
+- `v2.1-base` is the standard verifier generated for the default OpenVM v2.1 configuration.
+- `v2.1-deferral` is generated with deferral support enabled. Use this variant when your verifier must support verifying `verify-stark` guest programs.
 
-The examples below use `v2.0-base`. If your application needs guest program `verify-stark` support, replace `v2.0-base` with `v2.0-deferral` in the import and deployment paths.
+The examples below use `v2.1-base`. If your application needs guest program `verify-stark` support, replace `v2.1-base` with `v2.1-deferral` in the import and deployment paths.
 
 ## Usage
 
 If you are using a deployed instance of the verifier contract, then you can import the interfaces in your contract directly.
 
 ```solidity
-import { IOpenVmHalo2Verifier } from "openvm-solidity-sdk/v2.0-base/interfaces/IOpenVmHalo2Verifier.sol";
+import { IOpenVmHalo2Verifier } from "openvm-solidity-sdk/v2.1-base/interfaces/IOpenVmHalo2Verifier.sol";
 
 contract MyContract {
     function myFunction() public view {
@@ -48,7 +48,7 @@ contract MyContract {
 If you want to deploy your own instance of the verifier contract, you can use `forge create`:
 
 ```bash
-forge create src/v2.0-base/OpenVmHalo2Verifier.sol:OpenVmHalo2Verifier --rpc-url $RPC --private-key $PRIVATE_KEY --broadcast
+forge create src/v2.1-base/OpenVmHalo2Verifier.sol:OpenVmHalo2Verifier --rpc-url $RPC --private-key $PRIVATE_KEY --broadcast
 ```
 
 If you want to import the verifier contract into your own repository for testing purposes, note that it is locked to Solidity version `0.8.19`. If your project uses a different version, the import may not compile. As a workaround, you can compile the contract separately and use `vm.etch()` to inject the raw bytecode into your tests.
